@@ -1,28 +1,13 @@
-# Dependencies
+# Node / React
 node_modules/
-backend/target/
-frontend/dist/
-frontend/build/
+dist/
+build/
 
-# Local Tools
-tools/
+# Spring Boot / Java
+target/
 
-# Environment variables
+# Environment files
 .env
-.env.local
-
-# IDEs
-.vscode/
-.idea/
-*.iml
-
-# OS
-.DS_Store
-Thumbs.db
 
 # Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-logs/
 *.log
