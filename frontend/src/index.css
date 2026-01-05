@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -16,15 +17,35 @@
   /* Emerald 600 */
 
   /* Light Mode Defaults */
-  --color-background: #F3F4F6;
+  --color-background: #F8FAFC; /* Slate-50 for more premium feel */
   --color-surface: #FFFFFF;
-  --color-text: #1F2937;
-  --color-text-muted: #6B7280;
-  --color-border: #E5E7EB;
+  --color-text: #1E293B; /* Slate-800 */
+  --color-text-muted: #64748B; /* Slate-500 */
+  --color-border: #E2E8F0; /* Slate-200 */
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-text);
+  font-family: 'Inter', sans-serif;
   @apply antialiased transition-colors duration-200;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }

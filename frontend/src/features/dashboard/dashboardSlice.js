@@ -23,9 +23,25 @@ export const getStats = createAsyncThunk('dashboard/getStats', async (_, thunkAP
     }
 });
 
+// Get recent activity
+export const getRecentActivity = createAsyncThunk('dashboard/getRecentActivity', async (_, thunkAPI) => {
+    try {
+        return await dashboardService.getRecentActivity();
+    } catch (error) {
+        const message =
+            (error.response && error.response.data && error.response.data.message) ||
+            error.message ||
+            error.toString();
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
 export const dashboardSlice = createSlice({
     name: 'dashboard',
-    initialState,
+    initialState: {
+        ...initialState,
+        recentActivity: [],
+    },
     reducers: {
         reset: (state) => initialState,
     },
@@ -43,6 +59,9 @@ export const dashboardSlice = createSlice({
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload;
+            })
+            .addCase(getRecentActivity.fulfilled, (state, action) => {
+                state.recentActivity = action.payload;
             });
     },
 });

@@ -41,6 +41,9 @@ public class User {
 
     private String phoneNumber;
 
+    @Column(nullable = false, columnDefinition = "DOUBLE DEFAULT 0.0")
+    private Double hourlyRate = 0.0;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 }

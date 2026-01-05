@@ -45,6 +45,12 @@ public class AttendanceController {
         }
     }
 
+    @GetMapping("/history/{userId}")
+    @PreAuthorize("hasAuthority('EMPLOYEE') or hasAuthority('ADMIN')")
+    public List<Attendance> getUserHistory(@PathVariable Long userId) {
+        return attendanceService.getUserHistory(userId);
+    }
+
     @GetMapping("/my-history")
     @PreAuthorize("hasAuthority('EMPLOYEE') or hasAuthority('ADMIN')")
     public List<Attendance> getMyHistory() {
@@ -57,5 +63,60 @@ public class AttendanceController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public List<Attendance> getAllAttendance() {
         return attendanceService.getAllAttendance();
+    }
+
+    @GetMapping("/recent")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public List<Attendance> getRecentActivity() {
+        return attendanceService.getRecentActivity();
+    }
+
+    @PostMapping("/late-request")
+    @PreAuthorize("hasAuthority('EMPLOYEE') or hasAuthority('ADMIN')")
+    public ResponseEntity<?> requestLatePunchIn(@RequestBody java.util.Map<String, String> payload) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        try {
+            return ResponseEntity.ok(attendanceService.requestLatePunchIn(userDetails.getId(), payload.get("reason")));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/late-request/{requestId}/approve")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> approveLatePunchIn(@PathVariable Long requestId) {
+        try {
+            return ResponseEntity.ok(attendanceService.approveLatePunchIn(requestId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/late-request/{requestId}/reject")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> rejectLatePunchIn(@PathVariable Long requestId) {
+        try {
+            return ResponseEntity.ok(attendanceService.rejectLatePunchIn(requestId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/late-requests/pending")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public List<com.smarthr.entity.LateAttendanceRequest> getPendingLateRequests() {
+        System.out.println("Fetching pending late requests...");
+        List<com.smarthr.entity.LateAttendanceRequest> requests = attendanceService.getPendingLateRequests();
+        System.out.println("Found " + requests.size() + " pending requests.");
+        return requests;
+    }
+
+    @GetMapping("/late-request/my-status")
+    @PreAuthorize("hasAuthority('EMPLOYEE') or hasAuthority('ADMIN')")
+    public ResponseEntity<?> getMyLateRequestStatus() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        return ResponseEntity.of(attendanceService.getMyLateRequest(userDetails.getId()));
     }
 }

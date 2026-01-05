@@ -41,35 +41,30 @@ const Sidebar = () => {
     }
 
     return (
-        <div className="bg-white w-64 h-screen fixed px-4 py-6 border-r flex flex-col justify-between transition-colors duration-200">
+        <div className="bg-white w-64 h-screen fixed px-4 pb-4 pt-2 border-r border-gray-100 flex flex-col justify-between transition-colors duration-200 font-sans shadow-soft">
             <div>
-                {/* Logo Section */}
-                <div className="flex items-center space-x-3 px-4 mb-10">
-                    <div className="p-2 bg-primary rounded-lg">
-                        <Clock className="text-white" size={24} />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold text-gray-800 leading-tight">AttendEase</h1>
-                        <p className="text-xs text-gray-500">HR System</p>
+                <div className="flex items-center justify-start mb-6 pl-4 pt-2">
+                    <div className="w-full h-auto">
+                        <img src="/logo.png?v=2" alt="SmartHR Logo" className="w-full h-full object-contain object-left" />
                     </div>
                 </div>
 
                 {/* Navigation */}
-                <nav className="space-y-1">
+                <nav className="space-y-2">
                     {navItems.map((item) => {
                         const active = isActive(item.path);
                         return (
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${active
-                                    ? 'bg-primary text-white font-medium shadow-md'
-                                    : 'text-gray-600 hover:bg-blue-50 hover:text-primary'
+                                className={`flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 group relative overflow-hidden ${active
+                                    ? 'bg-primary text-white font-medium shadow-lg shadow-primary/25'
+                                    : 'text-gray-500 hover:bg-gray-50 hover:text-primary'
                                     }`}
                             >
-                                <item.icon size={20} className={`transition-transform duration-200 ${active ? '' : 'group-hover:scale-110'}`} />
-                                <span className="transition-all duration-200">{item.label}</span>
-                                {active && <div className="ml-auto w-1 h-6 bg-white rounded-full"></div>}
+                                <item.icon size={22} strokeWidth={active ? 2.5 : 2} className={`transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                <span className="font-heading tracking-wide text-[15px]">{item.label}</span>
+                                {active && <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white/20 rounded-l-full"></div>}
                             </Link>
                         );
                     })}
@@ -79,24 +74,24 @@ const Sidebar = () => {
             </div>
 
             {/* Bottom Section */}
-            <div className="space-y-1">
+            <div className="space-y-2">
                 <Link
                     to="/settings"
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group ${isActive('/settings')
-                        ? 'bg-primary text-white font-medium shadow-md'
-                        : 'text-gray-600 hover:bg-blue-50 hover:text-primary'
+                    className={`flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-300 group ${isActive('/settings')
+                        ? 'bg-primary text-white font-medium shadow-lg shadow-primary/25'
+                        : 'text-gray-500 hover:bg-gray-50 hover:text-primary'
                         }`}
                 >
-                    <SettingsIcon size={20} className={`transition-transform duration-200 ${isActive('/settings') ? '' : 'group-hover:rotate-90'}`} />
-                    <span>Settings</span>
+                    <SettingsIcon size={22} className={`transition-transform duration-300 ${isActive('/settings') ? 'rotate-90' : 'group-hover:rotate-90'}`} />
+                    <span className="font-heading text-[15px]">Settings</span>
                 </Link>
 
                 <button
                     onClick={onLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 transition-all duration-200 group"
+                    className="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl text-red-500 hover:bg-red-50 hover:shadow-sm transition-all duration-300 group"
                 >
-                    <LogOut size={20} className="transition-transform duration-200 group-hover:translate-x-1" />
-                    <span>Logout</span>
+                    <LogOut size={22} className="transition-transform duration-300 group-hover:translate-x-1" />
+                    <span className="font-heading text-[15px]">Logout</span>
                 </button>
             </div>
         </div>

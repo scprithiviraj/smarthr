@@ -11,6 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
+        List<Attendance> findTop10ByOrderByDateDescClockInTimeDesc();
+
         List<Attendance> findByUser(User user);
 
         Optional<Attendance> findByUserAndDate(User user, LocalDate date);

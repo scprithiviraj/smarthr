@@ -279,16 +279,27 @@ public class ReportService {
 
             List<User> users = userRepository.findAll();
             for (User user : users) {
+                // 1. Calculate Worked Hours
                 List<Attendance> userLogs = attendanceRepository.findByUserAndDateBetween(user, startDate, endDate);
-                double totalHours = userLogs.stream()
+                double workedHours = userLogs.stream()
                         .mapToDouble(a -> a.getTotalHours() != null ? a.getTotalHours() : 0.0)
                         .sum();
-                double hourlyRate = 25.0; // Mock rate
-                double salary = totalHours * hourlyRate;
+
+                // 2. Calculate Paid Leave Hours (Standard 8 hours per day)
+                List<LeaveRequest> userLeaves = leaveRequestRepository.findByUserAndStartDateBetween(user, startDate, endDate);
+                double leaveHours = userLeaves.stream()
+                        .filter(l -> l.getStatus() == com.smarthr.entity.LeaveStatus.APPROVED)
+                        .filter(l -> !l.getLeaveType().equals("LOSS_OF_PAY")) // Exclude LOP
+                        .mapToDouble(l -> l.getDays() * 8.0)
+                        .sum();
+
+                double totalPayableHours = workedHours + leaveHours;
+                double hourlyRate = user.getHourlyRate() != null ? user.getHourlyRate() : 0.0;
+                double salary = totalPayableHours * hourlyRate;
 
                 table.addCell(user.getFullName());
-                table.addCell(String.format("%.2f", totalHours));
-                table.addCell("$" + hourlyRate);
+                table.addCell(String.format("%.2f (Work) + %.2f (Leave)", workedHours, leaveHours));
+                table.addCell("$" + String.format("%.2f", hourlyRate));
                 table.addCell("$" + String.format("%.2f", salary));
             }
 

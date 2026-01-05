@@ -9,8 +9,15 @@ const getUserStats = async () => {
     return response.data;
 };
 
+// Get recent activity
+const getRecentActivity = async () => {
+    const response = await api.get('/attendance/recent');
+    return response.data;
+};
+
 const dashboardService = {
     getUserStats,
+    getRecentActivity,
 };
 
 export default dashboardService;

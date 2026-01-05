@@ -146,11 +146,11 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in-up">
             {/* Header Section */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <p className="text-gray-500 mt-1">Welcome back! Here's your attendance overview.</p>
+                <h1 className="text-3xl font-heading font-bold text-gray-900">Dashboard</h1>
+                <p className="text-slate-500 mt-1 text-lg">Welcome back! Here's your daily overview.</p>
             </div>
 
             {/* Stats Grid */}
@@ -158,19 +158,19 @@ const Dashboard = () => {
                 {statCardsData.map((card, index) => {
                     const IconComponent = iconMap[card.iconName];
                     return (
-                        <div key={index} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between h-36">
+                        <div key={index} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-soft hover:shadow-glow transition-all duration-300 group">
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">{card.label}</p>
-                                    <h3 className="text-2xl font-bold text-gray-800 mt-2">{card.value}</h3>
+                                    <h3 className="text-3xl font-bold text-gray-900 mt-2 font-heading tracking-tight">{card.value}</h3>
                                 </div>
-                                <div className={`p-2 rounded-lg ${card.color}`}>
-                                    <IconComponent className={card.textColor} size={24} />
+                                <div className={`p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 ${card.color} bg-opacity-50`}>
+                                    <IconComponent className={card.textColor} size={24} strokeWidth={2.5} />
                                 </div>
                             </div>
-                            <div className="flex items-center text-xs">
-                                {index === 0 && <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase mr-2">Present</span>}
-                                <span className={index === 1 ? "text-green-600" : "text-gray-500"}>
+                            <div className="flex items-center mt-4 text-xs font-medium">
+                                {index === 0 && <span className="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase mr-2 tracking-wide">Present</span>}
+                                <span className={index === 1 ? "text-emerald-600" : "text-gray-400"}>
                                     {card.subtext}
                                 </span>
                             </div>
@@ -180,45 +180,59 @@ const Dashboard = () => {
             </div>
 
             {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Monthly Attendance */}
-                <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 className="text-lg font-bold text-gray-800 mb-1">Monthly Attendance</h3>
-                    <p className="text-sm text-gray-500 mb-6">Your attendance trend over the last 6 months</p>
-                    <div className="h-64">
+                <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
+                    <div className="flex justify-between items-end mb-6">
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-900 font-heading">Monthly Attendance</h3>
+                            <p className="text-sm text-gray-400 mt-1">Attendance trend over the last 6 months</p>
+                        </div>
+                    </div>
+                    <div className="h-72">
                         <Bar data={barChartData} options={barChartOptions} />
                     </div>
                 </div>
 
                 {/* Leave Distribution */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 className="text-lg font-bold text-gray-800 mb-1">Leave Distribution</h3>
-                    <p className="text-sm text-gray-500 mb-6">Breakdown of leaves taken this year</p>
-                    <div className="h-64 flex justify-center">
+                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
+                    <h3 className="text-xl font-bold text-gray-900 mb-1 font-heading">Leave Distribution</h3>
+                    <p className="text-sm text-gray-400 mb-8">Breakdown of leaves taken this year</p>
+                    <div className="h-64 flex justify-center relative">
                         <Doughnut data={pieChartData} options={pieChartOptions} />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="text-center">
+                                <span className="block text-3xl font-bold text-gray-800">{dashboardStats?.totalLeaves || 0}</span>
+                                <span className="text-xs text-gray-400 uppercase tracking-widest">Total</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
-                <p className="text-sm text-gray-500 mb-6">Your latest attendance and leave activities</p>
+            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-soft">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 font-heading">Recent Activity</h3>
 
-                <div className="space-y-6">
+                <div className="relative border-l-2 border-gray-100 ml-3 space-y-8 pl-8 py-2">
                     {dashboardStats?.activityFeed?.map((activity, index) => (
-                        <div key={index} className="flex items-start space-x-4">
-                            <div className={`mt-1 p-2 rounded-full ${activity.type === 'ATTENDANCE' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}>
-                                {activity.type === 'ATTENDANCE' ? <CheckCircle size={16} /> : <Clock size={16} />}
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-800">{activity.message}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">{new Date(activity.date).toLocaleString()}</p>
+                        <div key={index} className="relative group">
+                            {/* Timeline Dot */}
+                            <div className={`absolute -left-[41px] top-1 w-5 h-5 rounded-full border-4 border-white shadow-sm ${activity.type === 'ATTENDANCE' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                                <div>
+                                    <p className="font-semibold text-gray-900 text-sm group-hover:text-primary transition-colors duration-200">{activity.message}</p>
+                                    <p className="text-xs text-gray-400 mt-1 font-medium">{new Date(activity.date).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                </div>
+                                <div className={`mt-2 sm:mt-0 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${activity.type === 'ATTENDANCE' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                                    {activity.type}
+                                </div>
                             </div>
                         </div>
                     ))}
                     {(!dashboardStats?.activityFeed || dashboardStats.activityFeed.length === 0) && (
-                        <p className="text-gray-500 text-sm">No recent activity.</p>
+                        <p className="text-gray-400 text-sm italic">No recent activity to show.</p>
                     )}
                 </div>
             </div>

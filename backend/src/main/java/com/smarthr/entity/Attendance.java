@@ -14,7 +14,7 @@ public class Attendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -25,6 +25,7 @@ public class Attendance {
     private LocalDateTime clockOutTime;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "VARCHAR(20)")
     private AttendanceStatus status;
 
     private Double totalHours; // Calculated hours

@@ -39,6 +39,17 @@ public class UserController {
         }
     }
 
+    @DeleteMapping("/{id}/avatar")
+    @PreAuthorize("hasAuthority('EMPLOYEE') or hasAuthority('ADMIN')")
+    public org.springframework.http.ResponseEntity<?> deleteAvatar(@PathVariable Long id) {
+        try {
+            User updatedUser = userService.deleteProfilePicture(id);
+            return org.springframework.http.ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('EMPLOYEE') or hasAuthority('ADMIN')")
     public org.springframework.http.ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
@@ -63,13 +74,25 @@ public class UserController {
     }
 
     @GetMapping("/avatars/{filename:.+}")
-    public org.springframework.http.ResponseEntity<org.springframework.core.io.Resource> getAvatar(
-            @PathVariable String filename) {
-        org.springframework.core.io.Resource file = userService.loadAvatar(filename);
+    public org.springframework.http.ResponseEntity<?> getAvatar(@PathVariable String filename) {
+        org.springframework.core.io.Resource file = null;
+        try {
+            file = userService.loadAvatar(filename);
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.notFound().build();
+        }
+
+        String contentType = "image/jpeg";
+        if (filename.toLowerCase().endsWith(".png")) {
+            contentType = "image/png";
+        } else if (filename.toLowerCase().endsWith(".gif")) {
+            contentType = "image/gif";
+        }
+
         return org.springframework.http.ResponseEntity.ok()
                 .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
                         "inline; filename=\"" + file.getFilename() + "\"")
-                .contentType(org.springframework.http.MediaType.IMAGE_JPEG)
+                .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
                 .body(file);
     }
 

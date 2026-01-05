@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
-import { User, Bell, Lock, Camera, Upload } from 'lucide-react';
+import { User, Bell, Lock, Camera, Upload, Trash2 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateUser, updateProfile, changePassword } from '../features/auth/authSlice';
+import { useNavigate } from 'react-router-dom';
+import { updateUser, updateProfile, changePassword, logout } from '../features/auth/authSlice';
 import api from '../utils/axios';
 
 const Settings = () => {
@@ -9,6 +10,8 @@ const Settings = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const [previewImage, setPreviewImage] = useState(null);
     const fileInputRef = useRef(null);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const tabs = [
         { id: 'profile', label: 'Profile', icon: User },
@@ -19,8 +22,6 @@ const Settings = () => {
     const handleUploadClick = () => {
         fileInputRef.current.click();
     };
-
-    const dispatch = useDispatch(); // Add this hook
 
     const handleFileChange = async (e) => {
         const file = e.target.files[0];
@@ -49,10 +50,29 @@ const Settings = () => {
         }
     };
 
+    const handleRemovePhoto = async () => {
+        if (!user.profilePicture) return;
+
+        if (!window.confirm("Are you sure you want to remove your profile photo?")) {
+            return;
+        }
+
+        try {
+            await api.delete(`/users/${user.id}/avatar`);
+            // Dispatch update to Redux store
+            dispatch(updateUser({ profilePicture: null }));
+            alert("Profile picture removed successfully!");
+        } catch (error) {
+            console.error("Remove error", error);
+            alert("Failed to remove profile picture: " + (error.response?.data || error.message));
+        }
+    };
+
     const [formData, setFormData] = useState({
         fullName: user?.fullName || "",
         email: user?.email || "",
         phoneNumber: user?.phoneNumber || "",
+        hourlyRate: user?.hourlyRate || 0.0,
         // Add other fields mapped to user object
     });
 
@@ -104,220 +124,242 @@ const Settings = () => {
             });
     };
 
-    return (
-        <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-            <p className="text-gray-500 -mt-4">Manage your account settings and preferences.</p>
+    const handleResetSystem = async () => {
+        if (!window.confirm("ARE YOU SURE? This will delete ALL users, attendance logs, and leave requests. Ideally used for testing/demos. This action cannot be undone.")) {
+            return;
+        }
 
-            {/* Tabs */}
-            <div className="flex space-x-2 border-b">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center space-x-2 px-6 py-3 font-medium text-sm rounded-t-lg transition ${activeTab === tab.id
-                            ? 'bg-gray-100 text-gray-800'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }`}
-                    >
-                        <tab.icon size={16} />
-                        <span>{tab.label}</span>
-                    </button>
-                ))}
+        try {
+            await api.delete('/users/reset');
+            alert("System reset successfully. You will be logged out.");
+            dispatch(logout());
+            navigate('/login');
+        } catch (error) {
+            console.error("Reset failed", error);
+            alert("Failed to reset system: " + (error.response?.data || error.message));
+        }
+    };
+
+    return (
+        <div className="space-y-8 animate-fade-in-up">
+            <div>
+                <h1 className="text-3xl font-heading font-bold text-gray-900">Settings</h1>
+                <p className="text-slate-500 mt-1 text-lg">Manage your account settings and preferences.</p>
             </div>
 
-            {/* Content Area */}
-            <div className="bg-white p-8 rounded-b-2xl rounded-tr-2xl shadow-sm border border-gray-100">
-
-                {/* Profile Tab */}
-                {activeTab === 'profile' && (
-                    <div className="space-y-8 animate-fadeIn">
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-800">Profile Information</h3>
-                            <p className="text-sm text-gray-500">Update your personal details and profile picture</p>
-                        </div>
-
-                        <div className="flex items-center space-x-6">
-                            <div className="w-24 h-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold overflow-hidden border-4 border-white shadow-sm">
-                                {user?.profilePicture ? (
-                                    <img src={`http://localhost:8080/api/users/avatars/${user.profilePicture}`} alt="Profile" className="w-full h-full object-cover" />
-                                ) : (
-                                    user?.fullName ? user.fullName.substring(0, 2).toUpperCase() : user?.username?.substring(0, 2).toUpperCase() || 'SJ'
-                                )}
-                            </div>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileChange}
-                                className="hidden"
-                                accept="image/png, image/jpeg, image/gif"
-                            />
+            <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden min-h-[600px] flex flex-col md:flex-row">
+                {/* Sidebar / Tabs */}
+                <div className="w-full md:w-64 bg-slate-50/50 border-r border-gray-100 p-4">
+                    <div className="space-y-1">
+                        {tabs.map((tab) => (
                             <button
-                                onClick={handleUploadClick}
-                                className="flex items-center space-x-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl font-medium text-sm transition-all duration-200 ${activeTab === tab.id
+                                    ? 'bg-white text-primary shadow-sm ring-1 ring-gray-100'
+                                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/50'
+                                    }`}
                             >
-                                <Upload size={16} />
-                                <span>Upload Photo</span>
+                                <tab.icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                                <span>{tab.label}</span>
                             </button>
-                            <p className="text-xs text-gray-400">JPG, PNG or GIF (max 2MB)</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Full Name" className="w-full p-3 border border-gray-200 rounded-lg text-gray-700 outline-none focus:ring-1 focus:ring-blue-500" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Employee ID</label>
-                                <input type="text" defaultValue={user?.id ? `EMP${String(user.id).padStart(3, '0')}` : "EMP001"} disabled className="w-full p-3 border border-gray-200 rounded-lg text-gray-500 bg-gray-50 outline-none" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@company.com" className="w-full p-3 border border-gray-200 rounded-lg text-gray-700 outline-none focus:ring-1 focus:ring-blue-500" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                                <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+1 (555) 123-4567" className="w-full p-3 border border-gray-200 rounded-lg text-gray-700 outline-none focus:ring-1 focus:ring-blue-500" />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                                <input type="text" defaultValue="Engineering" className="w-full p-3 border border-gray-200 rounded-lg text-gray-700 outline-none focus:ring-1 focus:ring-blue-500" />
-                            </div>
-                        </div>
-                        <div className="flex justify-end">
-                            <button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition">Save Changes</button>
-                        </div>
+                        ))}
                     </div>
-                )}
+                </div>
 
-                {/* Notifications Tab */}
-                {activeTab === 'notifications' && (
-                    <div className="space-y-8 animate-fadeIn">
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-800">Notification Preferences</h3>
-                            <p className="text-sm text-gray-500">Choose how you want to be notified</p>
-                        </div>
+                {/* Content Area */}
+                <div className="flex-1 p-8 md:p-10">
+                    {/* Profile Tab */}
+                    {activeTab === 'profile' && (
+                        <div className="space-y-8 animate-fade-in-up max-w-2xl">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 font-heading">Profile Information</h3>
+                                <p className="text-sm text-slate-500 mt-1">Update your personal details and profile picture</p>
+                            </div>
 
-                        <div className="space-y-6">
-                            {[
-                                { title: 'Email Notifications', desc: 'Receive notifications via email', default: true },
-                                { title: 'Leave Approvals', desc: 'Get notified when your leave is approved/rejected', default: true },
-                                { title: 'Attendance Reminders', desc: 'Daily reminders for punch in/out', default: true },
-                                { title: 'Weekly Reports', desc: 'Receive weekly attendance reports', default: false },
-                                { title: 'Push Notifications', desc: 'Receive push notifications on your device', default: true },
-                            ].map((item, index) => (
-                                <div key={index} className="flex justify-between items-center py-4 border-b border-gray-50 last:border-0">
-                                    <div>
-                                        <h4 className="font-medium text-gray-800">{item.title}</h4>
-                                        <p className="text-sm text-gray-500">{item.desc}</p>
+                            <div className="flex items-center space-x-8">
+                                <div className="relative group">
+                                    <div className="w-28 h-28 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-3xl font-bold overflow-hidden border-4 border-white shadow-lg group-hover:shadow-glow transition-all duration-300">
+                                        {user?.profilePicture ? (
+                                            <img src={`http://localhost:8080/api/users/avatars/${user.profilePicture}`} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            user?.fullName ? user.fullName.substring(0, 2).toUpperCase() : user?.username?.substring(0, 2).toUpperCase() || 'SJ'
+                                        )}
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" defaultChecked={item.default} className="sr-only peer" />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                    </label>
+                                    <button
+                                        onClick={handleUploadClick}
+                                        className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-md hover:bg-primary-dark transition-colors"
+                                        title="Change Avatar"
+                                    >
+                                        <Camera size={16} />
+                                    </button>
                                 </div>
-                            ))}
-                        </div>
-                        <div className="flex justify-end">
-                            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition">Save Preferences</button>
-                        </div>
-                    </div>
-                )}
 
-                {/* Security Tab */}
-                {activeTab === 'security' && (
-                    <div className="space-y-8 animate-fadeIn">
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-800">Change Password</h3>
-                            <p className="text-sm text-gray-500">Update your password to keep your account secure</p>
-                        </div>
+                                <div className="space-y-3">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        className="hidden"
+                                        accept="image/png, image/jpeg, image/gif"
+                                    />
+                                    <div>
+                                        <p className="font-semibold text-gray-900">Profile Photo</p>
+                                        <p className="text-xs text-slate-500 mt-1">Supports JPG, PNG or GIF (max 2MB)</p>
+                                    </div>
+                                    <div className="flex space-x-3">
+                                        <button
+                                            onClick={handleUploadClick}
+                                            className="flex items-center space-x-2 px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition uppercase tracking-wide"
+                                        >
+                                            <Upload size={14} />
+                                            <span>Upload</span>
+                                        </button>
+                                        <button
+                                            onClick={handleRemovePhoto}
+                                            className="flex items-center space-x-2 px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition uppercase tracking-wide"
+                                        >
+                                            <Trash2 size={14} />
+                                            <span>Remove</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
-                        <div className="space-y-6 max-w-2xl">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                                <input
-                                    type="password"
-                                    name="currentPassword"
-                                    value={passwordData.currentPassword}
-                                    onChange={handlePasswordChange}
-                                    className="w-full p-3 border border-gray-200 rounded-lg text-gray-700 outline-none focus:ring-1 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                                <input
-                                    type="password"
-                                    name="newPassword"
-                                    value={passwordData.newPassword}
-                                    onChange={handlePasswordChange}
-                                    className="w-full p-3 border border-gray-200 rounded-lg text-gray-700 outline-none focus:ring-1 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                                <input
-                                    type="password"
-                                    name="confirmPassword"
-                                    value={passwordData.confirmPassword}
-                                    onChange={handlePasswordChange}
-                                    className="w-full p-3 border border-gray-200 rounded-lg text-gray-700 outline-none focus:ring-1 focus:ring-blue-500"
-                                />
-                            </div>
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={handleChangePasswordSubmit}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg transition"
-                                >
-                                    Change Password
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="pt-8 border-t">
-                            <div className="flex justify-between items-center">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="group">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 group-focus-within:text-primary transition-colors">Full Name</label>
+                                    <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Full Name" className="w-full p-4 border border-gray-200 rounded-xl text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-slate-50 focus:bg-white" />
+                                </div>
                                 <div>
-                                    <h3 className="font-bold text-gray-800">Two-Factor Authentication</h3>
-                                    <p className="text-sm text-gray-500">Add an extra layer of security to your account</p>
-                                    <p className="text-sm text-gray-500 mt-2">Enable 2FA<br />Require a verification code in addition to your password</p>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Employee ID</label>
+                                    <input type="text" defaultValue={user?.id ? `EMP${String(user.id).padStart(3, '0')}` : "EMP001"} disabled className="w-full p-4 border border-gray-200 rounded-xl text-gray-400 bg-gray-100 outline-none cursor-not-allowed font-mono text-sm" />
                                 </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" className="sr-only peer" />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
+                                <div className="group">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 group-focus-within:text-primary transition-colors">Email</label>
+                                    <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@company.com" className="w-full p-4 border border-gray-200 rounded-xl text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-slate-50 focus:bg-white" />
+                                </div>
+                                <div className="group">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 group-focus-within:text-primary transition-colors">Phone Number</label>
+                                    <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+1 (555) 123-4567" className="w-full p-4 border border-gray-200 rounded-xl text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-slate-50 focus:bg-white" />
+                                </div>
+                                <div className="group">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 group-focus-within:text-primary transition-colors">Hourly Rate ($)</label>
+                                    <input type="number" name="hourlyRate" value={formData.hourlyRate} onChange={handleChange} placeholder="0.00" className="w-full p-4 border border-gray-200 rounded-xl text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-slate-50 focus:bg-white" />
+                                </div>
+                                <div className="md:col-span-2 group">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Department</label>
+                                    <input type="text" defaultValue="Engineering" className="w-full p-4 border border-gray-200 rounded-xl text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-slate-50 focus:bg-white" />
+                                </div>
+                            </div>
+                            <div className="flex justify-end pt-4">
+                                <button onClick={handleSave} className="bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-1">Save Changes</button>
                             </div>
                         </div>
+                    )}
 
-                        {/* Danger Zone */}
-                        <div className="pt-8 border-t">
-                            <h3 className="text-lg font-bold text-red-600 mb-4">Danger Zone</h3>
-                            <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-                                <h4 className="font-bold text-red-800 mb-2">Reset System Data</h4>
-                                <p className="text-sm text-red-600 mb-4">
-                                    This action will delete ALL users (except Admin), leave requests, attendance logs, and departments.
-                                    The User ID sequence will be reset to 1. This action cannot be undone.
-                                </p>
-                                <button
-                                    onClick={async () => {
-                                        if (confirm("Are you ABSOLUTELY SURE? This will wipe all data!")) {
-                                            try {
-                                                await api.delete('/users/reset');
-                                                alert("System reset successful. You will be logged out.");
-                                                localStorage.clear();
-                                                window.location.href = '/login';
-                                            } catch (error) {
-                                                console.error(error);
-                                                alert("Failed to reset system: " + (error.response?.data || error.message));
-                                            }
-                                        }
-                                    }}
-                                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-lg transition"
-                                >
-                                    Reset System Data
-                                </button>
+                    {/* Notifications Tab */}
+                    {activeTab === 'notifications' && (
+                        <div className="space-y-8 animate-fade-in-up max-w-2xl">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 font-heading">Notification Preferences</h3>
+                                <p className="text-sm text-slate-500 mt-1">Choose how you want to be notified</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                {[
+                                    { title: 'Email Notifications', desc: 'Receive notifications via email', default: true },
+                                    { title: 'Leave Approvals', desc: 'Get notified when your leave is approved/rejected', default: true },
+                                    { title: 'Attendance Reminders', desc: 'Daily reminders for punch in/out', default: true },
+                                    { title: 'Weekly Reports', desc: 'Receive weekly attendance reports', default: false },
+                                    { title: 'Push Notifications', desc: 'Receive push notifications on your device', default: true },
+                                ].map((item, index) => (
+                                    <div key={index} className="flex justify-between items-center p-4 border border-gray-100 rounded-xl hover:bg-slate-50 transition-colors">
+                                        <div>
+                                            <h4 className="font-bold text-gray-800 text-sm">{item.title}</h4>
+                                            <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" defaultChecked={item.default} className="sr-only peer" />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex justify-end pt-4">
+                                <button className="bg-white border border-gray-200 text-gray-700 font-bold py-3 px-8 rounded-xl hover:bg-gray-50 transition-all shadow-sm">Reset to Default</button>
+                                <button className="ml-4 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-1">Save Preferences</button>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
+
+                    {/* Security Tab */}
+                    {activeTab === 'security' && (
+                        <div className="space-y-8 animate-fade-in-up max-w-2xl">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 font-heading">Security</h3>
+                                <p className="text-sm text-slate-500 mt-1">Manage your password and account security</p>
+                            </div>
+
+                            {user?.roles?.includes('ADMIN') && (
+                                <div className="p-6 border border-red-100 bg-red-50 rounded-2xl">
+                                    <h4 className="font-bold text-red-700 mb-2">Reset System Data</h4>
+                                    <p className="text-sm text-red-600 mb-4">This action will delete all users, leaves, and attendance records. This is intended for testing purposes only.</p>
+                                    <button
+                                        onClick={handleResetSystem}
+                                        className="bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2.5 px-6 rounded-lg shadow-md shadow-red-200 transition-all hover:shadow-lg"
+                                    >
+                                        Reset Everything
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="space-y-6 pt-4 border-t border-gray-100">
+                                <h4 className="font-bold text-gray-800">Change Password</h4>
+                                <div className="group">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Current Password</label>
+                                    <input
+                                        type="password"
+                                        name="currentPassword"
+                                        value={passwordData.currentPassword}
+                                        onChange={handlePasswordChange}
+                                        className="w-full p-4 border border-gray-200 rounded-xl text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-slate-50 focus:bg-white"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="group">
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">New Password</label>
+                                        <input
+                                            type="password"
+                                            name="newPassword"
+                                            value={passwordData.newPassword}
+                                            onChange={handlePasswordChange}
+                                            className="w-full p-4 border border-gray-200 rounded-xl text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-slate-50 focus:bg-white"
+                                        />
+                                    </div>
+                                    <div className="group">
+                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Confirm Password</label>
+                                        <input
+                                            type="password"
+                                            name="confirmPassword"
+                                            value={passwordData.confirmPassword}
+                                            onChange={handlePasswordChange}
+                                            className="w-full p-4 border border-gray-200 rounded-xl text-gray-700 outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all bg-slate-50 focus:bg-white"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end pt-4">
+                                    <button
+                                        onClick={handleChangePasswordSubmit}
+                                        className="bg-gray-900 hover:bg-black text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg shadow-gray-200 hover:shadow-xl hover:-translate-y-1"
+                                    >
+                                        Update Password
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

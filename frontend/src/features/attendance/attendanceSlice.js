@@ -35,6 +35,25 @@ export const getHistory = createAsyncThunk('attendance/getHistory', async (_, th
     }
 });
 
+export const requestLatePunchIn = createAsyncThunk('attendance/requestLatePunchIn', async (reason, thunkAPI) => {
+    try {
+        const response = await api.post('/attendance/late-request', { reason });
+        return response.data;
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data);
+    }
+});
+
+export const getMyLateRequest = createAsyncThunk('attendance/getMyLateRequest', async (_, thunkAPI) => {
+    try {
+        const response = await api.get('/attendance/late-request/my-status');
+        return response.data;
+    } catch (error) {
+        // 404 means no request; handle gracefully if needed or just return null
+        return thunkAPI.rejectWithValue(error.response.data);
+    }
+});
+
 export const attendanceSlice = createSlice({
     name: 'attendance',
     initialState,

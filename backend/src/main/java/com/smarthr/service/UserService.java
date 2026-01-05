@@ -23,17 +23,42 @@ public class UserService {
             if (!java.nio.file.Files.exists(rootLocation)) {
                 java.nio.file.Files.createDirectories(rootLocation);
             }
+            // Delete old avatar if exists
+            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+            if (user.getProfilePicture() != null) {
+                try {
+                    java.nio.file.Path oldFile = rootLocation.resolve(user.getProfilePicture());
+                    java.nio.file.Files.deleteIfExists(oldFile);
+                } catch (Exception e) {
+                    System.err.println("Failed to delete old avatar: " + e.getMessage());
+                }
+            }
+
             String fileName = userId + "_" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
             java.nio.file.Path targetLocation = rootLocation.resolve(fileName);
             java.nio.file.Files.copy(file.getInputStream(), targetLocation,
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
             user.setProfilePicture(fileName);
             return userRepository.save(user);
         } catch (Exception e) {
             throw new RuntimeException("Could not store file. Error: " + e.getMessage());
         }
+    }
+
+    public User deleteProfilePicture(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getProfilePicture() != null) {
+            try {
+                java.nio.file.Path file = rootLocation.resolve(user.getProfilePicture());
+                java.nio.file.Files.deleteIfExists(file);
+            } catch (Exception e) {
+                System.err.println("Failed to delete avatar file: " + e.getMessage());
+            }
+            user.setProfilePicture(null);
+            return userRepository.save(user);
+        }
+        return user;
     }
 
     public User updateUser(Long userId, User userDetails) {
@@ -47,6 +72,8 @@ public class UserService {
             user.setDesignation(userDetails.getDesignation());
         if (userDetails.getPhoneNumber() != null)
             user.setPhoneNumber(userDetails.getPhoneNumber());
+        if (userDetails.getHourlyRate() != null && userDetails.getHourlyRate() != 0.0)
+             user.setHourlyRate(userDetails.getHourlyRate());
 
         return userRepository.save(user);
     }
