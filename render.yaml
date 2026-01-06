@@ -29,11 +29,11 @@ services:
     rootDir: frontend
     plan: free
     envVars:
-      - key: VITE_API_URL
+      - key: BACKEND_URL
         fromService:
           type: web
           name: smarthr-backend
-          property: url
+          property: hostport
 
 databases:
   - name: smarthr-db
