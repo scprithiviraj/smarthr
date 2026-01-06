@@ -1,0 +1,42 @@
+services:
+  # Backend Service
+  - type: web
+    name: smarthr-backend
+    runtime: docker
+    repo: https://github.com/scprithiviraj/smarthr
+    rootDir: backend
+    plan: free
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: smarthr-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: smarthr-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: smarthr-db
+          property: password
+    healthCheckPath: /api/stats # Use a valid endpoint for health check
+
+  # Frontend Service
+  - type: web
+    name: smarthr-frontend
+    runtime: docker
+    repo: https://github.com/scprithiviraj/smarthr
+    rootDir: frontend
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: smarthr-backend
+          property: url
+
+databases:
+  - name: smarthr-db
+    databaseName: smarthr
+    user: smarthr
+    plan: free
