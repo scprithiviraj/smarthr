@@ -19,7 +19,7 @@ services:
         fromDatabase:
           name: smarthr-db
           property: password
-    healthCheckPath: /api/stats # Use a valid endpoint for health check
+    healthCheckPath: /api/public/health # Use a valid endpoint for health check
 
   # Frontend Service
   - type: web
