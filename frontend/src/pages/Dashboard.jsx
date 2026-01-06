@@ -39,7 +39,13 @@ const Dashboard = () => {
         totalLeaves: 3,
         pendingLeaves: 1,
         workingHours: "8h 30m",
-        avgWorkingHours: "8h 15m"
+        avgWorkingHours: "8h 15m",
+        totalLeaves: 10,
+        leaveDistribution: {
+            "SICK": 3,
+            "CASUAL": 5,
+            "EARNED": 2
+        }
     };
 
     // --- Data Preparation ---
@@ -65,7 +71,7 @@ const Dashboard = () => {
         {
             label: "Leaves (This Year)",
             value: `${dashboardStats?.attendanceStatusCounts?.LEAVE || dashboardStats?.totalLeaves || 0} / 24`,
-            subtext: "14 days remaining",
+            subtext: "23 days remaining",
             iconName: "Calendar",
             color: "bg-orange-100",
             textColor: "text-orange-600"
@@ -92,7 +98,7 @@ const Dashboard = () => {
     // Monthly Attendance (Bar Chart)
     const monthlyLabels = Object.keys(dashboardStats?.lastSixMonthsAttendance || {}).length > 0
         ? Object.keys(dashboardStats.lastSixMonthsAttendance)
-        : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        : ['Aug', 'Sept', 'Oct', 'Nov', 'Dec', 'Jan'];
 
     const monthlyData = Object.keys(dashboardStats?.lastSixMonthsAttendance || {}).length > 0
         ? Object.values(dashboardStats.lastSixMonthsAttendance)
@@ -128,11 +134,23 @@ const Dashboard = () => {
     };
 
     // Leave Distribution (Pie Chart)
+    const leaveTypes = ['SICK', 'CASUAL', 'EARNED', 'MATERNITY', 'PATERNITY', 'LOSS_OF_PAY'];
+    const leaveLabels = ['Sick Leave', 'Casual Leave', 'Earned Leave', 'Maternity Leave', 'Paternity Leave', 'Loss of Pay'];
+    const leaveColors = ['#EF4444', '#3B82F6', '#10B981', '#EC4899', '#8B5CF6', '#6B7280'];
+
+    const leaveData = leaveTypes.map(type => dashboardStats?.leaveDistribution?.[type] || 0);
+
+    // Filter out types with 0 leaves to keep chart clean? Or keep all to show what's tracked?
+    // Generally nicer to filter out 0s for the chart itself so we don't have empty legend items/segments?
+    // User asked "why leave calculations are showing mock data get accurately", they probably want to see accurate zeros too if they are zero.
+    // However, chartjs handles zeros by just not showing a segment. Legend is handled manually below.
+    // If we keep all, the legend will show all types, which is good for information.
+
     const pieChartData = {
-        labels: ['Sick Leave', 'Casual Leave', 'Earned Leave'],
+        labels: leaveLabels,
         datasets: [{
-            data: [3, 5, 2], // Mock distribution as backend only gives total LEAVE count usually
-            backgroundColor: ['#EF4444', '#3B82F6', '#10B981'], // Red, Blue, Green
+            data: leaveData,
+            backgroundColor: leaveColors,
             borderWidth: 0,
         }]
     };
@@ -140,8 +158,9 @@ const Dashboard = () => {
     const pieChartOptions = {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '70%',
         plugins: {
-            legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } }
+            legend: { display: false }
         }
     };
 
@@ -206,6 +225,19 @@ const Dashboard = () => {
                                 <span className="text-xs text-gray-400 uppercase tracking-widest">Total</span>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Custom Legend */}
+                    <div className="mt-6 flex flex-wrap justify-center gap-4">
+                        {pieChartData.labels.map((label, index) => (
+                            <div key={index} className="flex items-center text-sm text-gray-600">
+                                <span
+                                    className="w-3 h-3 rounded-full mr-2"
+                                    style={{ backgroundColor: pieChartData.datasets[0].backgroundColor[index] }}
+                                ></span>
+                                {label}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

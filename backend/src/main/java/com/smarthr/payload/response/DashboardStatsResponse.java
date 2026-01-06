@@ -14,6 +14,8 @@ public class DashboardStatsResponse {
     private List<Map<String, Object>> activityFeed; // Recent actions
     private Map<String, Long> lastSixMonthsAttendance;// Month -> Present Count
     private Double totalWorkingHours; // Total hours worked this month
+    private Map<String, Long> leaveDistribution; // Breakdown by type (Sick, Casual, etc.)
+    private long totalLeaves; // Sum of all approved leaves this year
 
     // Constructors, Getters, Setters
     public DashboardStatsResponse() {
@@ -22,7 +24,7 @@ public class DashboardStatsResponse {
     public DashboardStatsResponse(long totalWorkingDays, long presentDays, long pendingLeaves, long totalEmployees,
             Map<String, Long> attendanceStatusCounts, Map<String, Double> weeklyWorkingHours,
             List<Map<String, Object>> activityFeed, Map<String, Long> lastSixMonthsAttendance,
-            Double totalWorkingHours) {
+            Double totalWorkingHours, Map<String, Long> leaveDistribution, long totalLeaves) {
         this.totalWorkingDays = totalWorkingDays;
         this.presentDays = presentDays;
         this.pendingLeaves = pendingLeaves;
@@ -32,6 +34,16 @@ public class DashboardStatsResponse {
         this.activityFeed = activityFeed;
         this.lastSixMonthsAttendance = lastSixMonthsAttendance;
         this.totalWorkingHours = totalWorkingHours;
+        this.leaveDistribution = leaveDistribution;
+        this.totalLeaves = totalLeaves;
+    }
+
+    public long getTotalLeaves() {
+        return totalLeaves;
+    }
+
+    public void setTotalLeaves(long totalLeaves) {
+        this.totalLeaves = totalLeaves;
     }
 
     public List<Map<String, Object>> getActivityFeed() {
@@ -104,5 +116,13 @@ public class DashboardStatsResponse {
 
     public void setTotalWorkingHours(Double totalWorkingHours) {
         this.totalWorkingHours = totalWorkingHours;
+    }
+
+    public Map<String, Long> getLeaveDistribution() {
+        return leaveDistribution;
+    }
+
+    public void setLeaveDistribution(Map<String, Long> leaveDistribution) {
+        this.leaveDistribution = leaveDistribution;
     }
 }

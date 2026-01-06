@@ -100,6 +100,8 @@ const Leave = () => {
                                     <option value="SICK">Sick Leave</option>
                                     <option value="CASUAL">Casual Leave</option>
                                     <option value="EARNED">Earned Leave</option>
+                                    <option value="MATERNITY">Maternity Leave</option>
+                                    <option value="PATERNITY">Paternity Leave</option>
                                     <option value="LOSS_OF_PAY">Loss of Pay / Additional Leave</option>
                                 </select>
                                 <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">

@@ -29,7 +29,7 @@ services:
     build: ./frontend
     container_name: smarthr-frontend
     ports:
-      - "5173:5173"
+      - "3000:80"
     depends_on:
       - backend
 

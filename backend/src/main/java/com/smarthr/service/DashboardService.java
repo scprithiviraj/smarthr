@@ -17,6 +17,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
@@ -141,6 +142,17 @@ public class DashboardService {
                                 .mapToDouble(a -> a.getTotalHours() != null ? a.getTotalHours() : 0.0)
                                 .sum();
 
+                // 8. Leave Distribution (By Type, for this year)
+                // Filter approved leaves for the current year
+                Map<String, Long> leaveDistribution = leaveRequestRepository.findByUser(user).stream()
+                                .filter(l -> l.getStatus() == LeaveStatus.APPROVED &&
+                                                l.getStartDate().getYear() == now.getYear())
+                                .collect(Collectors.groupingBy(com.smarthr.entity.LeaveRequest::getLeaveType,
+                                                Collectors.counting()));
+
+                // 9. Total Leaves
+                long totalLeaves = leaveDistribution.values().stream().mapToLong(Long::longValue).sum();
+
                 return new DashboardStatsResponse(
                                 totalWorkingDays,
                                 presentDays,
@@ -150,7 +162,9 @@ public class DashboardService {
                                 weeklyHours,
                                 activityFeed,
                                 lastSixMonthsAttendance,
-                                totalWorkingHours);
+                                totalWorkingHours,
+                                leaveDistribution,
+                                totalLeaves);
         }
 
         // Admin Stats
@@ -211,6 +225,16 @@ public class DashboardService {
                                         activityFeed.add(log);
                                 });
 
+                // 8. Leave Distribution (System Wide, for this year)
+                Map<String, Long> leaveDistribution = leaveRequestRepository.findAll().stream()
+                                .filter(l -> l.getStatus() == LeaveStatus.APPROVED &&
+                                                l.getStartDate().getYear() == now.getYear())
+                                .collect(Collectors.groupingBy(com.smarthr.entity.LeaveRequest::getLeaveType,
+                                                Collectors.counting()));
+
+                // 9. Total Leaves (System Wide)
+                long totalLeaves = leaveDistribution.values().stream().mapToLong(Long::longValue).sum();
+
                 return new DashboardStatsResponse(
                                 0, // working days (not needed for admin summary really)
                                 presentToday, // reusing this field for "On Leave Today" or similar in frontend mapping?
@@ -221,6 +245,8 @@ public class DashboardService {
                                 weeklyHours,
                                 activityFeed,
                                 lastSixMonthsAttendance,
-                                0.0);
+                                0.0,
+                                leaveDistribution,
+                                totalLeaves);
         }
 }
