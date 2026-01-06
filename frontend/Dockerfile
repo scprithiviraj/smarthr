@@ -11,5 +11,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
 COPY entrypoint.sh /entrypoint.sh
+RUN dos2unix /entrypoint.sh || sed -i 's/\r$//' /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
