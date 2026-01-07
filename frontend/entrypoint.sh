@@ -3,8 +3,6 @@
 echo "Starting Frontend..."
 echo "BACKEND_URL is set to: $BACKEND_URL"
 
-export PORT=${PORT:-80}
-
 if [ -z "$BACKEND_URL" ]; then
     echo "WARNING: BACKEND_URL is empty! Nginx might fail."
 fi
