@@ -112,6 +112,7 @@ public class AttendanceController {
         return requests;
     }
 
+    @SuppressWarnings("null")
     @GetMapping("/late-request/my-status")
     @PreAuthorize("hasAuthority('EMPLOYEE') or hasAuthority('ADMIN')")
     public ResponseEntity<?> getMyLateRequestStatus() {
