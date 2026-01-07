@@ -8,7 +8,7 @@ if [ -z "$BACKEND_URL" ]; then
 fi
 
 # Replace env vars in nginx.conf template
-envsubst '${BACKEND_URL}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
+envsubst '${BACKEND_URL} ${PORT}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
 echo "Nginx config generated:"
 cat /etc/nginx/conf.d/default.conf
