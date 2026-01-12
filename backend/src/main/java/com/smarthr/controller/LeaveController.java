@@ -41,6 +41,14 @@ public class LeaveController {
         return leaveService.getUserLeaves(userDetails.getId());
     }
 
+    @GetMapping("/balance")
+    @PreAuthorize("hasAuthority('EMPLOYEE') or hasAuthority('ADMIN')")
+    public java.util.Map<String, Integer> getLeaveBalance() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        return leaveService.getLeaveBalance(userDetails.getId());
+    }
+
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('ADMIN')")
     public List<LeaveRequest> getAllLeaves() {

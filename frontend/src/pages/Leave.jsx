@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { applyLeave, getMyLeaves, reset } from '../features/leave/leaveSlice';
+import { applyLeave, getMyLeaves, reset, getLeaveBalance } from '../features/leave/leaveSlice';
 import { Clock } from 'lucide-react';
 
 const Leave = () => {
     const dispatch = useDispatch();
-    const { leaves } = useSelector((state) => state.leave);
+    const { leaves, leaveBalance: balanceData } = useSelector((state) => state.leave); // Renamed for clarity
+
+    useEffect(() => {
+        dispatch(getLeaveBalance());
+    }, [dispatch]);
 
     const [formData, setFormData] = useState({
         leaveType: 'SICK',
@@ -14,13 +18,10 @@ const Leave = () => {
         reason: ''
     });
 
-
-
     const handleSubmit = (e) => {
         e.preventDefault();
 
         // Date Validation
-        // Date Validation - Using String Comparison for robustness against offsets
         const d = new Date();
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -52,6 +53,18 @@ const Leave = () => {
             }
         }
 
+        // Sick Leave Limit Validation
+        if (formData.leaveType === 'SICK') {
+            const start = new Date(formData.startDate);
+            const end = new Date(formData.endDate);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            if (diffDays > 3) {
+                alert("Sick leave cannot apply for more than 3 days");
+                return;
+            }
+        }
+
         const data = new FormData();
         const leaveRequest = {
             leaveType: formData.leaveType,
@@ -63,6 +76,7 @@ const Leave = () => {
         dispatch(applyLeave(data)).then(() => {
             alert("Leave application submitted!"); // Feedback
             setFormData({ leaveType: 'SICK', startDate: '', endDate: '', reason: '' });
+            dispatch(getLeaveBalance()); // Refresh balance after application
         });
     };
 
@@ -70,11 +84,11 @@ const Leave = () => {
 
     // Data for right side
     const leaveBalance = [
-        { type: 'Casual Leave', days: '7 days' },
-        { type: 'Sick Leave', days: '5 days' },
-        { type: 'Earned Leave', days: '12 days' },
-        { type: 'Maternity Leave', days: '90 days' },
-        { type: 'Paternity Leave', days: '15 days' },
+        { type: 'Casual Leave', days: balanceData?.CASUAL ? `${balanceData.CASUAL} days` : '7 days' },
+        { type: 'Sick Leave', days: balanceData?.SICK ? `${balanceData.SICK} days` : '5 days' },
+        { type: 'Earned Leave', days: balanceData?.EARNED ? `${balanceData.EARNED} days` : '12 days' },
+        { type: 'Maternity Leave', days: balanceData?.MATERNITY ? `${balanceData.MATERNITY} days` : '90 days' },
+        { type: 'Paternity Leave', days: balanceData?.PATERNITY ? `${balanceData.PATERNITY} days` : '15 days' },
     ];
 
     return (

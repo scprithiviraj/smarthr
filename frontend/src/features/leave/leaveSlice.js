@@ -6,6 +6,7 @@ const initialState = {
     isLoading: false,
     isError: false,
     message: '',
+    leaveBalance: null,
 };
 
 export const applyLeave = createAsyncThunk('leave/apply', async (leaveData, thunkAPI) => {
@@ -51,6 +52,16 @@ export const rejectLeave = createAsyncThunk('leave/rejectLeave', async (id, thun
     try {
         const response = await api.put(`/leaves/${id}/reject`);
         return { id, status: 'REJECTED', data: response.data };
+    } catch (error) {
+        const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message);
+    }
+});
+
+export const getLeaveBalance = createAsyncThunk('leave/getLeaveBalance', async (_, thunkAPI) => {
+    try {
+        const response = await api.get('/leaves/balance');
+        return response.data;
     } catch (error) {
         const message = (error.response && error.response.data && error.response.data.message) || error.message || error.toString();
         return thunkAPI.rejectWithValue(message);
@@ -131,6 +142,20 @@ export const leaveSlice = createSlice({
                 }
             })
             .addCase(rejectLeave.rejected, (state, action) => {
+                state.isError = true;
+                state.message = action.payload || action.error.message;
+            })
+
+            // Get Leave Balance
+            .addCase(getLeaveBalance.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(getLeaveBalance.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.leaveBalance = action.payload;
+            })
+            .addCase(getLeaveBalance.rejected, (state, action) => {
+                state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload || action.error.message;
             });

@@ -37,6 +37,14 @@ public class LeaveService {
             throw new RuntimeException("End date cannot be before start date");
         }
 
+        // Sick Leave Validation
+        if ("SICK".equalsIgnoreCase(request.getLeaveType())) {
+            long days = java.time.temporal.ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
+            if (days > 3) {
+                throw new RuntimeException("Sick leave cannot apply for more than 3 days");
+            }
+        }
+
         // Handle File Upload
         if (file != null && !file.isEmpty()) {
             try {
@@ -83,5 +91,34 @@ public class LeaveService {
         leave.setApprovedBy(admin);
 
         return leaveRequestRepository.save(leave);
+    }
+
+    public java.util.Map<String, Integer> getLeaveBalance(Long userId) {
+        java.util.Map<String, Integer> totalLeaves = new java.util.HashMap<>();
+        totalLeaves.put("SICK", 5);
+        totalLeaves.put("CASUAL", 7);
+        totalLeaves.put("EARNED", 12);
+        totalLeaves.put("MATERNITY", 90);
+        totalLeaves.put("PATERNITY", 15);
+
+        List<LeaveRequest> approvedLeaves = leaveRequestRepository.findByUserId(userId).stream()
+                .filter(l -> l.getStatus() == LeaveStatus.APPROVED)
+                .collect(java.util.stream.Collectors.toList());
+
+        java.util.Map<String, Integer> usedLeaves = new java.util.HashMap<>();
+        for (LeaveRequest leave : approvedLeaves) {
+            String type = leave.getLeaveType().toUpperCase();
+            int days = (int) leave.getDays();
+            usedLeaves.put(type, usedLeaves.getOrDefault(type, 0) + days);
+        }
+
+        java.util.Map<String, Integer> balance = new java.util.HashMap<>();
+        for (String type : totalLeaves.keySet()) {
+            int total = totalLeaves.get(type);
+            int used = usedLeaves.getOrDefault(type, 0);
+            balance.put(type, Math.max(0, total - used));
+        }
+
+        return balance;
     }
 }
