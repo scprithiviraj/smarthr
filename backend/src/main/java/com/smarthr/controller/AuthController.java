@@ -82,6 +82,15 @@ public class AuthController {
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
 
+        if (signUpRequest.getRole() == Role.ADMIN) {
+            long adminCount = userRepository.countByRole(Role.ADMIN);
+            if (adminCount > 0) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageResponse("Error: An Admin already exists! Only one admin is allowed."));
+            }
+        }
+
         // Create new user's account
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
