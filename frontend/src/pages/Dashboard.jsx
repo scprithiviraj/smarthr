@@ -40,7 +40,7 @@ const Dashboard = () => {
         pendingLeaves: 1,
         workingHours: "8h 30m",
         avgWorkingHours: "8h 15m",
-        totalLeaves: 10,
+
         leaveDistribution: {
             "SICK": 3,
             "CASUAL": 5,
