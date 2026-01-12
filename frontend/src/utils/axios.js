@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 const api = axios.create({
+<<<<<<< HEAD
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+=======
+    baseURL: 'https://smarthr-production.up.railway.app/api',
+>>>>>>> d4707d45f6fbd808b837038e6309a889d4624dfb
     // headers: {
     //     'Content-Type': 'application/json',
     // },
