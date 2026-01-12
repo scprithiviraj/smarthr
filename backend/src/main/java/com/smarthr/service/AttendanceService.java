@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,16 +29,18 @@ public class AttendanceService {
     @Autowired
     LateAttendanceRequestRepository lateAttendanceRequestRepository;
 
+    private static final ZoneId ZONE_ID = ZoneId.of("Asia/Kolkata");
+
     public Attendance checkIn(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZONE_ID);
 
         Optional<Attendance> existing = attendanceRepository.findByUserAndDate(user, today);
         if (existing.isPresent()) {
             throw new RuntimeException("Already checked in or attendance record exists for today");
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZONE_ID);
         // Check Late Logic (Threshold: 9:05 AM)
         if (now.toLocalTime().isAfter(java.time.LocalTime.of(9, 5))) {
             // Check if approved request exists
@@ -72,7 +75,7 @@ public class AttendanceService {
 
     public Attendance checkOut(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZONE_ID);
 
         Attendance attendance = attendanceRepository.findByUserAndDate(user, today)
                 .orElseThrow(() -> new RuntimeException("No attendance record found for today"));
@@ -81,7 +84,7 @@ public class AttendanceService {
             throw new RuntimeException("Already checked out");
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZONE_ID);
         attendance.setClockOutTime(now);
 
         // Calculate total hours
@@ -118,7 +121,7 @@ public class AttendanceService {
 
     public com.smarthr.entity.LateAttendanceRequest requestLatePunchIn(Long userId, String reason) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZONE_ID);
 
         if (lateAttendanceRequestRepository.findByUserAndDate(user, today).isPresent()) {
             throw new RuntimeException("Request already exists for today");
@@ -127,7 +130,7 @@ public class AttendanceService {
         com.smarthr.entity.LateAttendanceRequest request = new com.smarthr.entity.LateAttendanceRequest();
         request.setUser(user);
         request.setDate(today);
-        request.setRequestTime(LocalDateTime.now());
+        request.setRequestTime(LocalDateTime.now(ZONE_ID));
         request.setReason(reason);
         request.setStatus(com.smarthr.entity.RequestStatus.PENDING);
 
@@ -155,6 +158,6 @@ public class AttendanceService {
     @SuppressWarnings("null")
     public Optional<com.smarthr.entity.LateAttendanceRequest> getMyLateRequest(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        return lateAttendanceRequestRepository.findByUserAndDate(user, LocalDate.now());
+        return lateAttendanceRequestRepository.findByUserAndDate(user, LocalDate.now(ZONE_ID));
     }
 }
